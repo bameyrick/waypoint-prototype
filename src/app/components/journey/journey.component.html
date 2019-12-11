@@ -1,0 +1,80 @@
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Date</th>
+      <th scope="col">Activity</th>
+      <th scope="col">Latitude</th>
+      <th scope="col">Longitude</th>
+      <th scope="col">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let waypoint of journey; let index = index">
+      <td>{{ waypoint.timestamp | epoch }}</td>
+      <td>{{ waypoint.activity }}</td>
+      <td>{{ waypoint.latitude }}</td>
+      <td>{{ waypoint.longitude }}</td>
+      <td><button type="button" (click)="view(index)" [disabled]="currentViewedIndex === index">View</button></td>
+    </tr>
+  </tbody>
+</table>
+
+<div>
+  <div class="Journey__map-container">
+    <aol-map #map class="Journey__map" [ngClass]="{ 'Journey__map--mousedown': mousedown }">
+      <aol-interaction-default></aol-interaction-default>
+
+      <aol-view [zoom]="12">
+        <aol-coordinate [srid]="Projection.LatLon"></aol-coordinate>
+      </aol-view>
+
+      <aol-layer-tile>
+        <aol-source-osm></aol-source-osm>
+      </aol-layer-tile>
+
+      <aol-layer-vector *ngIf="currentLine && showHighlight" [zIndex]="1">
+        <aol-source-vector>
+          <aol-feature>
+            <aol-geometry-linestring>
+              <aol-collection-coordinates [coordinates]="currentLine.coordinates" [srid]="Projection.LatLon"></aol-collection-coordinates>
+            </aol-geometry-linestring>
+            <aol-style>
+              <aol-style-stroke [color]="currentLine.color" [width]="5"></aol-style-stroke>
+            </aol-style>
+          </aol-feature>
+        </aol-source-vector>
+      </aol-layer-vector>
+
+      <aol-layer-vector *ngIf="currentPoint && showHighlight" [zIndex]="1">
+        <aol-source-vector>
+          <aol-feature>
+            <aol-geometry-point>
+              <aol-coordinate [x]="currentPoint.longitude" [y]="currentPoint.latitude" [srid]="Projection.LatLon"></aol-coordinate>
+            </aol-geometry-point>
+            <aol-style>
+              <aol-style-circle [radius]="5">
+                <aol-style-fill [color]="currentPoint.color"></aol-style-fill>
+              </aol-style-circle>
+            </aol-style>
+          </aol-feature>
+        </aol-source-vector>
+      </aol-layer-vector>
+
+      <aol-layer-vector [zIndex]="2">
+        <aol-source-vector>
+          <ng-container *ngFor="let line of lines">
+            <aol-feature>
+              <aol-geometry-linestring>
+                <aol-collection-coordinates [coordinates]="line.coordinates" [srid]="Projection.LatLon"></aol-collection-coordinates>
+              </aol-geometry-linestring>
+              <aol-style>
+                <aol-style-stroke [color]="line.color" [width]="2"></aol-style-stroke>
+              </aol-style>
+            </aol-feature>
+          </ng-container>
+        </aol-source-vector>
+      </aol-layer-vector>
+    </aol-map>
+  </div>
+  <button *ngIf="currentViewedIndex !== -1" type="button" (click)="reset()">Reset</button>
+</div>
