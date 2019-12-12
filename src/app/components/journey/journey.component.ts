@@ -151,8 +151,11 @@ export class JourneyComponent implements AfterViewInit {
   private animateTo(center: [number, number], zoom: number, duration = 1000): void {
     const view = this.map.instance.getView();
     const originalZoom = view.getZoom();
-
-    const flyZoom = Math.min(zoom, originalZoom) - 0.5;
+    const lowestZoom = Math.min(zoom, originalZoom);
+    const flyZoom = lowestZoom - 0.5;
+    const durationMultiplier = 1.5 / (lowestZoom + 1);
+    const durationA = Math.abs(duration * durationMultiplier);
+    const durationB = duration - durationA;
 
     view.animate({
       center,
@@ -163,13 +166,13 @@ export class JourneyComponent implements AfterViewInit {
     view.animate(
       {
         zoom: flyZoom,
-        duration: duration / 2,
-        easing: ol.easing.easeOut,
+        duration: originalZoom < zoom ? durationA : durationB,
+        easing: ol.easing.inAndOut,
       },
       {
         zoom,
-        duration: duration / 2,
-        easing: ol.easing.easeIn,
+        duration: originalZoom > zoom ? durationA : durationB,
+        easing: ol.easing.inAndOut,
       }
     );
   }
